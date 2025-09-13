@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+    <style>
+        body {
+            background-color: #00008B; /* Dark blue background */
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        .hamburger {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 10px; /* Rounded square shape */
+        }
+        .menu {
+            position: absolute;
+            top: 60px; /* Position below hamburger button */
+            left: 20px;
+            background-color: #333;
+            width: 200px;
+            display: none; /* Initially hidden */
+            border-radius: 10px; /* Rounded square shape */
+            animation: fadeInDown 0.5s; /* Apply fadeInDown animation */
+        }
+        .menu ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .menu li {
+            padding: 10px;
+            border-bottom: 1px solid #444;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px; /* Rounded square shape for items */
+            margin: 5px;
+        }
+        .menu li:hover {
+            background-color: #555;
+        }
+
+        /* Animation for fading in and moving down */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Animation for fading out and moving up */
+        @keyframes fadeOutUp {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<button class="hamburger">☰</button>
+<div class="menu" id="menu">
+    <ul>
+        <li class="menu-item">Test Item 1</li>
+        <li class="menu-item">Test Item 2</li>
+        <li class="menu-item">Test Item 3</li>
+        <li class="menu-item">Test Item 4</li>
+    </ul>
+</div>
+
+<script>
+    const hamburger = document.querySelector('.hamburger');
+    const menu = document.querySelector('#menu');
+
+    hamburger.addEventListener('click', () => {
+        if (menu.style.display === 'block') {
+            // Apply fadeOutUp animation when closing
+            menu.style.animation = 'fadeOutUp 0.5s forwards';
+            setTimeout(() => { menu.style.display = 'none'; }, 500);
+        } else {
+            // Display the menu and apply fadeInDown animation
+            menu.style.display = 'block';
+            menu.style.animation = 'fadeInDown 0.5s forwards';
+        }
+    });
+
+    const menuItems = document.querySelectorAll('.menu-item');
+    menuItems.forEach(item => {
+        item.addEventListener('click', () => {
+            item.textContent = 'This button works!';
+        });
+    });
+</script>
+
+</body>
+</html>
+
