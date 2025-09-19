@@ -99,12 +99,27 @@
         #password {
             transition: none; /* Disable transition effects for instant change */
         }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .valid {
+            border-color: #28a745;
+        }
+        .invalid {
+            border-color: #dc3545;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="login-form">
             <h2>Login</h2>
+            <div id="errorMsg" class="error-message"></div>
             <div class="form-group">
                 <label for="username">Username</label>
                 <input type="text" id="username" placeholder="Enter username">
@@ -112,36 +127,80 @@
             <div class="form-group">
                 <label for="password">Password</label>
                 <input type="password" id="password" placeholder="Enter password">
+                <div id="passwordRules" style="font-size:12px; color:#555; margin-top:5px;">
+                    A senha deve ter pelo menos 8 caracteres, uma letra maiúscula, uma minúscula, um número e um símbolo.
+                </div>
             </div>
-            <button class="login-button">Login</button>
+            <button class="login-button" id="loginBtn">Login</button>
             <div class="options">
                 <a href="#">Forgot my password</a>
             </div>
-            <button class="register-button">Register</button>
+            <button class="register-button" id="registerBtn">Register</button>
         </div>
     </div>
 
     <script>
         const passwordInput = document.getElementById('password');
+        const usernameInput = document.getElementById('username');
+        const loginBtn = document.getElementById('loginBtn');
+        const errorMsg = document.getElementById('errorMsg');
+        const registerBtn = document.getElementById('registerBtn');
 
+        // Mostrar senha ao passar mouse
         passwordInput.addEventListener('mouseenter', function() {
-            // Change input type to text to reveal password
             passwordInput.type = 'text';
         });
-
         passwordInput.addEventListener('mouseleave', function() {
-            // Change input type back to password to hide it
             passwordInput.type = 'password';
         });
 
-        // Set initial theme based on system/browser preference
+        // Validação de senha em tempo real
+        passwordInput.addEventListener('input', function() {
+            if (validatePassword(passwordInput.value)) {
+                passwordInput.classList.remove('invalid');
+                passwordInput.classList.add('valid');
+            } else {
+                passwordInput.classList.remove('valid');
+                passwordInput.classList.add('invalid');
+            }
+        });
+
+        // Validação dos campos e redirecionamento
+        loginBtn.onclick = function() {
+            errorMsg.textContent = '';
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value;
+
+            if (!username || !password) {
+                errorMsg.textContent = 'Preencha todos os campos.';
+                return;
+            }
+            if (!validatePassword(password)) {
+                errorMsg.textContent = 'A senha não atende aos requisitos.';
+                return;
+            }
+            // Simula login bem-sucedido
+            window.location.href = 'home.html';
+        };
+
+        // Redireciona para tela de cadastro
+        registerBtn.onclick = function() {
+            window.location.href = 'register.html';
+        };
+
+        // Regras de senha
+        function validatePassword(password) {
+            // Mínimo 8 caracteres, 1 maiúscula, 1 minúscula, 1 número, 1 símbolo
+            const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+            return regex.test(password);
+        }
+
+        // Tema escuro
         const setThemeBasedOnSystemPreference = () => {
             if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                 document.body.classList.add('dark-mode');
             }
         };
-
-        // Listen for system/browser theme changes
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
             if (event.matches) {
                 document.body.classList.add('dark-mode');
@@ -149,12 +208,8 @@
                 document.body.classList.remove('dark-mode');
             }
         });
-
-        // Initialize theme
         document.addEventListener('DOMContentLoaded', function() {
             setThemeBasedOnSystemPreference();
         });
     </script>
 </body>
-</html>
-
