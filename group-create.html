@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Grupo de Estudo</title>
+    <style>
+        body {
+            background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .group-form {
+            background: #fff;
+            padding: 28px;
+            border-radius: 10px;
+            box-shadow: 0 0 12px rgba(0,0,0,0.12);
+            width: 370px;
+        }
+        .group-form h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .form-group input.valid {
+            border-color: #28a745;
+        }
+        .form-group input.invalid {
+            border-color: #dc3545;
+        }
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .success-message {
+            color: #28a745;
+            font-size: 15px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .create-button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .back-button {
+            width: 100%;
+            padding: 10px;
+            background-color: #6c757d;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .user-list {
+            margin-top: 8px;
+            margin-bottom: 8px;
+        }
+        .user-list label {
+            font-size: 13px;
+            margin-right: 8px;
+        }
+        .user-list input[type="checkbox"] {
+            margin-right: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="group-form">
+        <h2>Criar Grupo de Estudo</h2>
+        <div id="errorMsg" class="error-message"></div>
+        <div id="successMsg" class="success-message"></div>
+        <div class="form-group">
+            <label for="groupName">Nome do Grupo</label>
+            <input type="text" id="groupName" placeholder="Digite o nome do grupo">
+        </div>
+        <div class="form-group">
+            <label for="tags">Tags (separadas por vírgula)</label>
+            <input type="text" id="tags" placeholder="Ex: matemática, programação">
+        </div>
+        <div class="form-group">
+            <label for="limit">Limite de Participantes</label>
+            <input type="number" id="limit" min="2" max="50" placeholder="Ex: 10">
+        </div>
+        <div class="form-group user-list">
+            <label>Adicionar Usuários:</label><br>
+            <!-- Simulação de usuários cadastrados -->
+            <label><input type="checkbox" value="Ana"> Ana</label>
+            <label><input type="checkbox" value="Bruno"> Bruno</label>
+            <label><input type="checkbox" value="Carlos"> Carlos</label>
+            <label><input type="checkbox" value="Diana"> Diana</label>
+        </div>
+        <button class="create-button" id="createBtn">Criar Grupo</button>
+        <button class="back-button" id="backBtn">Voltar à Home</button>
+    </div>
+    <script>
+        const groupNameInput = document.getElementById('groupName');
+        const tagsInput = document.getElementById('tags');
+        const limitInput = document.getElementById('limit');
+        const createBtn = document.getElementById('createBtn');
+        const backBtn = document.getElementById('backBtn');
+        const errorMsg = document.getElementById('errorMsg');
+        const successMsg = document.getElementById('successMsg');
+        const userCheckboxes = document.querySelectorAll('.user-list input[type="checkbox"]');
+
+        // Validação em tempo real do nome do grupo
+        groupNameInput.addEventListener('input', function() {
+            if (groupNameInput.value.trim().length >= 3) {
+                groupNameInput.classList.remove('invalid');
+                groupNameInput.classList.add('valid');
+            } else {
+                groupNameInput.classList.remove('valid');
+                groupNameInput.classList.add('invalid');
+            }
+        });
+
+        // Validação em tempo real do limite
+        limitInput.addEventListener('input', function() {
+            const val = parseInt(limitInput.value);
+            if (val >= 2 && val <= 50) {
+                limitInput.classList.remove('invalid');
+                limitInput.classList.add('valid');
+            } else {
+                limitInput.classList.remove('valid');
+                limitInput.classList.add('invalid');
+            }
+        });
+
+        createBtn.onclick = function() {
+            errorMsg.textContent = '';
+            successMsg.textContent = '';
+
+            const groupName = groupNameInput.value.trim();
+            const tags = tagsInput.value.trim();
+            const limit = parseInt(limitInput.value);
+            const selectedUsers = Array.from(userCheckboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+
+            if (!groupName || groupName.length < 3) {
+                errorMsg.textContent = 'O nome do grupo deve ter pelo menos 3 caracteres.';
+                return;
+            }
+            if (!tags) {
+                errorMsg.textContent = 'Informe pelo menos uma tag.';
+                return;
+            }
+            if (!limit || limit < 2 || limit > 50) {
+                errorMsg.textContent = 'O limite de participantes deve ser entre 2 e 50.';
+                return;
+            }
+            if (selectedUsers.length === 0) {
+                errorMsg.textContent = 'Selecione pelo menos um usuário para o grupo.';
+                return;
+            }
+            if (selectedUsers.length > limit) {
+                errorMsg.textContent = 'O número de usuários excede o limite de participantes.';
+                return;
+            }
+
+            // Simula criação bem-sucedida
+            successMsg.textContent = 'Grupo criado com sucesso!';
+            setTimeout(() => {
+                window.location.href = 'home.html';
+            }, 1500);
+        };
+
+        backBtn.onclick = function() {
+            window.location.href = 'home.html';
+        };
+    </script>
+</body>
+</html>

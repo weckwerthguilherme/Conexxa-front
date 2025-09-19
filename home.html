@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Conexxa</title>
+    <style>
+        body {
+            background-color: #00008B;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        .hamburger {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 10px;
+        }
+        .menu {
+            position: absolute;
+            top: 60px;
+            left: 20px;
+            background-color: #333;
+            width: 220px;
+            display: none;
+            border-radius: 10px;
+            animation: fadeInDown 0.5s;
+        }
+        .menu ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .menu li {
+            padding: 12px;
+            border-bottom: 1px solid #444;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+            margin: 5px;
+            font-size: 16px;
+        }
+        .menu li:hover {
+            background-color: #555;
+        }
+        .welcome {
+            color: #fff;
+            text-align: center;
+            margin-top: 120px;
+            font-size: 2rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes fadeOutUp {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<button class="hamburger">☰</button>
+<div class="menu" id="menu">
+    <ul>
+        <li class="menu-item" data-link="group-create.html">Criar Grupo de Estudo</li>
+        <li class="menu-item" data-link="group-join.html">Ingressar em Grupo</li>
+        <li class="menu-item" data-link="group-admin.html">Administração de Grupo</li>
+        <li class="menu-item" data-link="tasks.html">Tarefas</li>
+        <li class="menu-item" data-link="index.html">Sair</li>
+    </ul>
+</div>
+<div class="welcome">
+    Bem-vindo à Conexxa!
+</div>
+
+<script>
+    const hamburger = document.querySelector('.hamburger');
+    const menu = document.querySelector('#menu');
+
+    hamburger.addEventListener('click', () => {
+        if (menu.style.display === 'block') {
+            menu.style.animation = 'fadeOutUp 0.5s forwards';
+            setTimeout(() => { menu.style.display = 'none'; }, 500);
+        } else {
+            menu.style.display = 'block';
+            menu.style.animation = 'fadeInDown 0.5s forwards';
+        }
+    });
+
+    const menuItems = document.querySelectorAll('.menu-item');
+    menuItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const link = item.getAttribute('data-link');
+            if (link) {
+                window.location.href = link;
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

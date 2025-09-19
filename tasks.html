@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tarefas</title>
+    <style>
+        body {
+            background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .tasks-container {
+            background: #fff;
+            padding: 28px;
+            border-radius: 10px;
+            box-shadow: 0 0 12px rgba(0,0,0,0.12);
+            width: 400px;
+        }
+        .tasks-container h2 {
+            text-align: center;
+            margin-bottom: 18px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .form-group input.valid,
+        .form-group textarea.valid,
+        .form-group select.valid {
+            border-color: #28a745;
+        }
+        .form-group input.invalid,
+        .form-group textarea.invalid,
+        .form-group select.invalid {
+            border-color: #dc3545;
+        }
+        .create-button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .back-button {
+            width: 100%;
+            padding: 10px;
+            background-color: #6c757d;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .success-message {
+            color: #28a745;
+            font-size: 15px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="tasks-container">
+        <h2>Criar Tarefa</h2>
+        <div id="errorMsg" class="error-message"></div>
+        <div id="successMsg" class="success-message"></div>
+        <div class="form-group">
+            <label for="taskTitle">Título da Tarefa</label>
+            <input type="text" id="taskTitle" placeholder="Digite o título da tarefa">
+        </div>
+        <div class="form-group">
+            <label for="taskDesc">Descrição</label>
+            <textarea id="taskDesc" rows="3" placeholder="Descreva a tarefa"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="taskGroup">Grupo</label>
+            <select id="taskGroup">
+                <option value="">Selecione o grupo</option>
+                <option value="Grupo de Matemática">Grupo de Matemática</option>
+                <option value="Programação Web">Programação Web</option>
+                <option value="Inglês Básico">Inglês Básico</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="taskUser">Responsável</label>
+            <select id="taskUser">
+                <option value="">Selecione o usuário</option>
+                <option value="Ana">Ana</option>
+                <option value="Bruno">Bruno</option>
+                <option value="Carlos">Carlos</option>
+                <option value="Diana">Diana</option>
+            </select>
+        </div>
+        <button class="create-button" id="createBtn">Criar Tarefa</button>
+        <button class="back-button" id="backBtn">Voltar à Home</button>
+    </div>
+    <script>
+        const taskTitleInput = document.getElementById('taskTitle');
+        const taskDescInput = document.getElementById('taskDesc');
+        const taskGroupSelect = document.getElementById('taskGroup');
+        const taskUserSelect = document.getElementById('taskUser');
+        const createBtn = document.getElementById('createBtn');
+        const backBtn = document.getElementById('backBtn');
+        const errorMsg = document.getElementById('errorMsg');
+        const successMsg = document.getElementById('successMsg');
+
+        // Validação em tempo real
+        taskTitleInput.addEventListener('input', function() {
+            if (taskTitleInput.value.trim().length >= 3) {
+                taskTitleInput.classList.remove('invalid');
+                taskTitleInput.classList.add('valid');
+            } else {
+                taskTitleInput.classList.remove('valid');
+                taskTitleInput.classList.add('invalid');
+            }
+        });
+
+        taskDescInput.addEventListener('input', function() {
+            if (taskDescInput.value.trim().length >= 5) {
+                taskDescInput.classList.remove('invalid');
+                taskDescInput.classList.add('valid');
+            } else {
+                taskDescInput.classList.remove('valid');
+                taskDescInput.classList.add('invalid');
+            }
+        });
+
+        createBtn.onclick = function() {
+            errorMsg.textContent = '';
+            successMsg.textContent = '';
+
+            const title = taskTitleInput.value.trim();
+            const desc = taskDescInput.value.trim();
+            const group = taskGroupSelect.value;
+            const user = taskUserSelect.value;
+
+            if (!title || title.length < 3) {
+                errorMsg.textContent = 'O título deve ter pelo menos 3 caracteres.';
+                return;
+            }
+            if (!desc || desc.length < 5) {
+                errorMsg.textContent = 'A descrição deve ter pelo menos 5 caracteres.';
+                return;
+            }
+            if (!group) {
+                errorMsg.textContent = 'Selecione um grupo.';
+                return;
+            }
+            if (!user) {
+                errorMsg.textContent = 'Selecione um responsável.';
+                return;
+            }
+
+            // Simula criação bem-sucedida
+            successMsg.textContent = 'Tarefa criada com sucesso!';
+            setTimeout(() => {
+                window.location.href = 'home.html';
+            }, 1500);
+        };
+
+        backBtn.onclick = function() {
+            window.location.href = 'home.html';
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administração de Grupo</title>
+    <style>
+        body {
+            background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .admin-container {
+            background: #fff;
+            padding: 28px;
+            border-radius: 10px;
+            box-shadow: 0 0 12px rgba(0,0,0,0.12);
+            width: 420px;
+        }
+        .admin-container h2 {
+            text-align: center;
+            margin-bottom: 18px;
+        }
+        .group-info {
+            margin-bottom: 18px;
+            background: #e9ecef;
+            padding: 12px;
+            border-radius: 6px;
+        }
+        .group-info span {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 15px;
+        }
+        .members-list {
+            margin-bottom: 18px;
+        }
+        .members-list h3 {
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        .member-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 5px;
+            margin-bottom: 6px;
+        }
+        .member-name {
+            font-weight: bold;
+        }
+        .role {
+            font-size: 13px;
+            color: #007BFF;
+            margin-left: 8px;
+        }
+        .actions button {
+            margin-left: 6px;
+            padding: 4px 10px;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .promote-btn { background: #28a745; color: #fff; }
+        .remove-btn { background: #dc3545; color: #fff; }
+        .mute-btn { background: #ffc107; color: #333; }
+        .back-button {
+            width: 100%;
+            padding: 10px;
+            background-color: #6c757d;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .feedback-message {
+            text-align: center;
+            font-size: 15px;
+            margin-bottom: 10px;
+        }
+        .feedback-success {
+            color: #28a745;
+        }
+        .feedback-error {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <h2>Administração de Grupo</h2>
+        <div class="group-info">
+            <span><strong>Título:</strong> Grupo de Matemática</span>
+            <span><strong>Tags:</strong> matemática, álgebra</span>
+            <span><strong>Limite de participantes:</strong> 10</span>
+        </div>
+        <div id="feedbackMsg" class="feedback-message"></div>
+        <div class="members-list">
+            <h3>Membros</h3>
+            <!-- Simulação de membros -->
+            <div class="member-row" data-name="Ana">
+                <span class="member-name">Ana</span>
+                <span class="role">Administrador</span>
+                <span class="actions">
+                    <!-- Ana já é admin, não pode promover -->
+                    <button class="remove-btn">Remover</button>
+                    <button class="mute-btn">Silenciar</button>
+                </span>
+            </div>
+            <div class="member-row" data-name="Bruno">
+                <span class="member-name">Bruno</span>
+                <span class="role">Membro</span>
+                <span class="actions">
+                    <button class="promote-btn">Promover a Admin</button>
+                    <button class="remove-btn">Remover</button>
+                    <button class="mute-btn">Silenciar</button>
+                </span>
+            </div>
+            <div class="member-row" data-name="Carlos">
+                <span class="member-name">Carlos</span>
+                <span class="role">Membro</span>
+                <span class="actions">
+                    <button class="promote-btn">Promover a Admin</button>
+                    <button class="remove-btn">Remover</button>
+                    <button class="mute-btn">Silenciar</button>
+                </span>
+            </div>
+            <div class="member-row" data-name="Diana">
+                <span class="member-name">Diana</span>
+                <span class="role">Membro</span>
+                <span class="actions">
+                    <button class="promote-btn">Promover a Admin</button>
+                    <button class="remove-btn">Remover</button>
+                    <button class="mute-btn">Silenciar</button>
+                </span>
+            </div>
+        </div>
+        <button class="back-button" id="backBtn">Voltar à Home</button>
+    </div>
+    <script>
+        const feedbackMsg = document.getElementById('feedbackMsg');
+        const backBtn = document.getElementById('backBtn');
+
+        // Simula papel do usuário logado (admin)
+        const currentUserRole = 'admin';
+
+        // Moderação de membros
+        document.querySelectorAll('.promote-btn').forEach(btn => {
+            btn.onclick = function() {
+                const row = btn.closest('.member-row');
+                const name = row.getAttribute('data-name');
+                const roleSpan = row.querySelector('.role');
+                if (roleSpan.textContent === 'Administrador') {
+                    feedbackMsg.textContent = 'Este membro já é administrador.';
+                    feedbackMsg.className = 'feedback-message feedback-error';
+                    return;
+                }
+                roleSpan.textContent = 'Administrador';
+                feedbackMsg.textContent = `Membro ${name} promovido a administrador com sucesso!`;
+                feedbackMsg.className = 'feedback-message feedback-success';
+            };
+        });
+
+        document.querySelectorAll('.remove-btn').forEach(btn => {
+            btn.onclick = function() {
+                const row = btn.closest('.member-row');
+                const name = row.getAttribute('data-name');
+                row.remove();
+                feedbackMsg.textContent = `Membro ${name} removido com sucesso!`;
+                feedbackMsg.className = 'feedback-message feedback-success';
+            };
+        });
+
+        document.querySelectorAll('.mute-btn').forEach(btn => {
+            btn.onclick = function() {
+                const row = btn.closest('.member-row');
+                const name = row.getAttribute('data-name');
+                feedbackMsg.textContent = `Membro ${name} silenciado com sucesso!`;
+                feedbackMsg.className = 'feedback-message feedback-success';
+            };
+        });
+
+        backBtn.onclick = function() {
+            window.location.href = 'home.html';
+        };
+    </script>
+</body>
+</html>
