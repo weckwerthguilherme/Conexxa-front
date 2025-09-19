@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Bate-papo do Grupo</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f4; }
+        .chat-container { max-width: 600px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 24px; }
+        .members { margin-bottom: 16px; }
+        .members span { background: #e0e0e0; border-radius: 4px; padding: 4px 8px; margin-right: 6px; }
+        .messages { border: 1px solid #ddd; border-radius: 6px; padding: 12px; height: 200px; overflow-y: auto; background: #fafafa; margin-bottom: 16px; }
+        .input-area { display: flex; }
+        .input-area input { flex: 1; padding: 8px; border-radius: 4px; border: 1px solid #ccc; }
+        .input-area button { margin-left: 8px; padding: 8px 16px; border-radius: 4px; border: none; background: #007bff; color: #fff; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <h2 id="groupTitle">Bate-papo do Grupo</h2>
+        <button onclick="goHome()" style="margin-bottom:16px; background:#007BFF; color:#fff; border:none; border-radius:4px; padding:8px 16px; cursor:pointer;">Home</button>
+        <div class="members" id="membersList">
+            <strong>Integrantes:</strong>
+            <!-- Integrantes dinâmicos -->
+        </div>
+        <div class="messages" id="messages">
+            <div><strong>Ana:</strong> Olá, grupo!</div>
+            <div><strong>Bruno:</strong> Oi Ana!</div>
+        </div>
+        <div class="input-area">
+            <input type="text" id="messageInput" placeholder="Digite sua mensagem...">
+            <button onclick="sendMessage()">Enviar</button>
+        </div>
+    </div>
+    <script>
+        // Exibe o nome do grupo criado
+        const groupTitle = document.getElementById('groupTitle');
+        const nomeGrupo = localStorage.getItem('grupoCriado');
+        if (nomeGrupo) {
+            groupTitle.textContent = 'Bate-papo do Grupo: ' + nomeGrupo;
+        }
+
+        // Exibe os integrantes atuais do grupo
+        function renderIntegrantesGrupo() {
+            const membersList = document.getElementById('membersList');
+            let gruposParticipantes = JSON.parse(localStorage.getItem('gruposParticipantes') || '{}');
+            let participantes = gruposParticipantes[nomeGrupo] || [
+                { nome: 'Ana', papel: 'Administrador' },
+                { nome: 'Bruno', papel: 'Membro' },
+                { nome: 'Carlos', papel: 'Membro' },
+                { nome: 'Diana', papel: 'Membro' }
+            ];
+            membersList.innerHTML = '<strong>Integrantes:</strong> ' + participantes.map(p => `<span>${p.nome}</span>`).join(' ');
+        }
+        renderIntegrantesGrupo();
+
+        // Exibe mensagens do grupo, incluindo tarefas
+        function renderMensagensGrupo() {
+            const messagesDiv = document.getElementById('messages');
+            let mensagensGrupos = JSON.parse(localStorage.getItem('mensagensGrupos') || '{}');
+            let msgs = mensagensGrupos[nomeGrupo] || [];
+            messagesDiv.innerHTML = msgs.map(m => {
+                if (m.tipo === 'tarefa') {
+                    return `<div style='background:#fbc2eb;color:#6a4fb6;padding:8px;border-radius:6px;margin-bottom:6px;'><strong>${m.autor}:</strong> ${m.texto} <span style='font-size:12px;color:#888;'>${m.data}</span></div>`;
+                }
+                return `<div><strong>${m.autor}:</strong> ${m.texto} <span style='font-size:12px;color:#888;'>${m.data}</span></div>`;
+            }).join('');
+        }
+        renderMensagensGrupo();
+        function sendMessage() {
+            var input = document.getElementById('messageInput');
+            var messages = document.getElementById('messages');
+            if(input.value.trim() !== '') {
+                // Salva mensagem no localStorage
+                let mensagensGrupos = JSON.parse(localStorage.getItem('mensagensGrupos') || '{}');
+                if (!mensagensGrupos[nomeGrupo]) mensagensGrupos[nomeGrupo] = [];
+                mensagensGrupos[nomeGrupo].push({ autor: 'Você', texto: input.value, data: new Date().toLocaleString() });
+                localStorage.setItem('mensagensGrupos', JSON.stringify(mensagensGrupos));
+                renderMensagensGrupo();
+                messages.scrollTop = messages.scrollHeight;
+                input.value = '';
+            }
+        }
+        function goHome() {
+            window.location.href = 'home.html';
+        }
+
+        // Atualiza integrantes e mensagens se voltar do admin ou tarefas
+        window.addEventListener('focus', function() {
+            renderIntegrantesGrupo();
+            renderMensagensGrupo();
+        });
+
+        // Atualiza integrantes se voltar do admin
+        window.addEventListener('focus', renderIntegrantesGrupo);
+    </script>
+</body>
+</html>

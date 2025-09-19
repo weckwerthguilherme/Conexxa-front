@@ -189,8 +189,15 @@
 
             // Simula criação bem-sucedida
             successMsg.textContent = 'Grupo criado com sucesso!';
+            // Salva o nome do grupo em um array no localStorage
+            let grupos = JSON.parse(localStorage.getItem('gruposCriados') || '[]');
+            if (!grupos.includes(groupName)) {
+                grupos.push(groupName);
+            }
+            localStorage.setItem('gruposCriados', JSON.stringify(grupos));
+            localStorage.setItem('grupoCriado', groupName); // grupo atual
             setTimeout(() => {
-                window.location.href = 'home.html';
+                window.location.href = 'group-chat.html';
             }, 1500);
         };
 

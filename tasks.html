@@ -111,14 +111,7 @@
             </select>
         </div>
         <div class="form-group">
-            <label for="taskUser">Responsável</label>
-            <select id="taskUser">
-                <option value="">Selecione o usuário</option>
-                <option value="Ana">Ana</option>
-                <option value="Bruno">Bruno</option>
-                <option value="Carlos">Carlos</option>
-                <option value="Diana">Diana</option>
-            </select>
+            <!-- Campo de responsável removido -->
         </div>
         <button class="create-button" id="createBtn">Criar Tarefa</button>
         <button class="back-button" id="backBtn">Voltar à Home</button>
@@ -127,11 +120,21 @@
         const taskTitleInput = document.getElementById('taskTitle');
         const taskDescInput = document.getElementById('taskDesc');
         const taskGroupSelect = document.getElementById('taskGroup');
-        const taskUserSelect = document.getElementById('taskUser');
+    // Campo de responsável removido
         const createBtn = document.getElementById('createBtn');
         const backBtn = document.getElementById('backBtn');
         const errorMsg = document.getElementById('errorMsg');
         const successMsg = document.getElementById('successMsg');
+
+        // Preenche grupos criados dinamicamente
+        function preencherGrupos() {
+            let grupos = JSON.parse(localStorage.getItem('gruposCriados') || '[]');
+            taskGroupSelect.innerHTML = '<option value="">Selecione o grupo</option>' +
+                grupos.map(g => `<option value="${g}">${g}</option>`).join('');
+        }
+        preencherGrupos();
+
+        // Campo de responsável removido
 
         // Validação em tempo real
         taskTitleInput.addEventListener('input', function() {
@@ -161,8 +164,6 @@
             const title = taskTitleInput.value.trim();
             const desc = taskDescInput.value.trim();
             const group = taskGroupSelect.value;
-            const user = taskUserSelect.value;
-
             if (!title || title.length < 3) {
                 errorMsg.textContent = 'O título deve ter pelo menos 3 caracteres.';
                 return;
@@ -175,13 +176,20 @@
                 errorMsg.textContent = 'Selecione um grupo.';
                 return;
             }
-            if (!user) {
-                errorMsg.textContent = 'Selecione um responsável.';
-                return;
-            }
 
-            // Simula criação bem-sucedida
-            successMsg.textContent = 'Tarefa criada com sucesso!';
+            // Salva tarefa no grupo selecionado
+            let tarefasGrupos = JSON.parse(localStorage.getItem('tarefasGrupos') || '{}');
+            if (!tarefasGrupos[group]) tarefasGrupos[group] = [];
+            tarefasGrupos[group].push({ titulo: title, descricao: desc, data: new Date().toLocaleString() });
+            localStorage.setItem('tarefasGrupos', JSON.stringify(tarefasGrupos));
+
+            // Adiciona tarefa como mensagem no chat do grupo
+            let mensagensGrupos = JSON.parse(localStorage.getItem('mensagensGrupos') || '{}');
+            if (!mensagensGrupos[group]) mensagensGrupos[group] = [];
+            mensagensGrupos[group].push({ autor: 'Sistema', texto: `Nova tarefa: ${title} - ${desc}`, data: new Date().toLocaleString(), tipo: 'tarefa' });
+            localStorage.setItem('mensagensGrupos', JSON.stringify(mensagensGrupos));
+
+            successMsg.textContent = 'Tarefa criada e enviada ao chat do grupo!';
             setTimeout(() => {
                 window.location.href = 'home.html';
             }, 1500);

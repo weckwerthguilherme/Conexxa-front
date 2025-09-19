@@ -107,102 +107,58 @@
         <h2>Ingressar em Grupo</h2>
         <div id="feedbackMsg" class="feedback-message"></div>
         <div class="form-group">
-            <label for="search">Pesquisar grupos (nome ou tags):</label>
-            <input type="text" id="search" placeholder="Ex: matemática, programação">
-            <button class="search-button" id="searchBtn">Pesquisar</button>
-        </div>
-        <div class="group-list" id="groupList">
-            <!-- Lista de grupos simulada -->
+            <label for="joinName">Digite o nome do grupo para ingressar:</label>
+            <input type="text" id="joinName" placeholder="Nome exato do grupo">
         </div>
         <div class="form-group">
-            <label for="joinCode">Ingresso por código/link:</label>
-            <input type="text" id="joinCode" placeholder="Digite o código ou link do grupo">
+            <label for="newMember">Nome do novo integrante:</label>
+            <input type="text" id="newMember" placeholder="Seu nome ou do novo integrante">
             <button class="join-button" id="joinBtn">Ingressar</button>
         </div>
         <button class="back-button" id="backBtn">Voltar à Home</button>
     </div>
     <script>
+
         const feedbackMsg = document.getElementById('feedbackMsg');
-        const groupList = document.getElementById('groupList');
-        const searchInput = document.getElementById('search');
-        const searchBtn = document.getElementById('searchBtn');
-        const joinCodeInput = document.getElementById('joinCode');
+        const joinNameInput = document.getElementById('joinName');
+        const newMemberInput = document.getElementById('newMember');
         const joinBtn = document.getElementById('joinBtn');
         const backBtn = document.getElementById('backBtn');
 
-        // Simulação de grupos
-        const groups = [
-            { title: 'Grupo de Matemática', tags: ['matemática', 'álgebra'], members: 10, limit: 10 },
-            { title: 'Programação Web', tags: ['programação', 'web'], members: 7, limit: 12 },
-            { title: 'Inglês Básico', tags: ['idiomas', 'inglês'], members: 5, limit: 8 },
-            { title: 'História Geral', tags: ['história'], members: 8, limit: 10 }
-        ];
-
-        function renderGroups(filter = '') {
-            groupList.innerHTML = '';
-            let filtered = groups.filter(g => 
-                g.title.toLowerCase().includes(filter.toLowerCase()) ||
-                g.tags.some(tag => tag.toLowerCase().includes(filter.toLowerCase()))
-            );
-            if (filtered.length === 0) {
-                groupList.innerHTML = '<div style="text-align:center;color:#888;">Nenhum grupo encontrado.</div>';
-                return;
-            }
-            filtered.forEach(group => {
-                const isFull = group.members >= group.limit;
-                const div = document.createElement('div');
-                div.className = 'group-item';
-                div.innerHTML = `
-                    <span class="group-title">${group.title}</span>
-                    <span class="group-tags">Tags: ${group.tags.join(', ')}</span>
-                    <span class="group-info">
-                        Integrantes: ${group.members} / ${group.limit}
-                        ${isFull ? '<span class="full-group">Grupo cheio</span>' : ''}
-                    </span>
-                    <button ${isFull ? 'disabled' : ''} class="join-group-btn" style="margin-top:6px;">${isFull ? 'Grupo cheio' : 'Ingressar'}</button>
-                `;
-                groupList.appendChild(div);
-
-                // Botão de ingresso
-                const joinBtnEl = div.querySelector('.join-group-btn');
-                joinBtnEl.onclick = function() {
-                    if (isFull) {
-                        feedbackMsg.textContent = 'Grupo cheio!';
-                        feedbackMsg.className = 'feedback-message feedback-error';
-                        return;
-                    }
-                    feedbackMsg.textContent = `Ingresso realizado com sucesso no grupo "${group.title}"!`;
-                    feedbackMsg.className = 'feedback-message feedback-success';
-                };
-            });
-        }
-
-        // Inicializa lista
-        renderGroups();
-
-        searchBtn.onclick = function() {
-            renderGroups(searchInput.value.trim());
-        };
-
         joinBtn.onclick = function() {
             feedbackMsg.textContent = '';
-            const code = joinCodeInput.value.trim();
-            if (!code) {
-                feedbackMsg.textContent = 'Digite o código ou link do grupo.';
+            const nomeGrupo = joinNameInput.value.trim();
+            const nomeIntegrante = newMemberInput.value.trim();
+            if (!nomeGrupo) {
+                feedbackMsg.textContent = 'Digite o nome do grupo.';
                 feedbackMsg.className = 'feedback-message feedback-error';
                 return;
             }
-            // Simulação de validação do código
-            if (code === 'MAT123') {
-                feedbackMsg.textContent = 'Ingresso realizado com sucesso no grupo "Grupo de Matemática"!';
-                feedbackMsg.className = 'feedback-message feedback-success';
-            } else if (code === 'WEB456') {
-                feedbackMsg.textContent = 'Ingresso realizado com sucesso no grupo "Programação Web"!';
-                feedbackMsg.className = 'feedback-message feedback-success';
-            } else {
-                feedbackMsg.textContent = 'Código ou link inválido.';
+            if (!nomeIntegrante) {
+                feedbackMsg.textContent = 'Digite o nome do novo integrante.';
                 feedbackMsg.className = 'feedback-message feedback-error';
+                return;
             }
+            let grupos = JSON.parse(localStorage.getItem('gruposCriados') || '[]');
+            if (!grupos.includes(nomeGrupo)) {
+                feedbackMsg.textContent = 'Grupo não encontrado.';
+                feedbackMsg.className = 'feedback-message feedback-error';
+                return;
+            }
+            // Adiciona usuário ao grupo
+            let gruposParticipantes = JSON.parse(localStorage.getItem('gruposParticipantes') || '{}');
+            let participantes = gruposParticipantes[nomeGrupo] || [];
+            if (!participantes.some(p => p.nome === nomeIntegrante)) {
+                participantes.push({ nome: nomeIntegrante, papel: 'Membro' });
+                gruposParticipantes[nomeGrupo] = participantes;
+                localStorage.setItem('gruposParticipantes', JSON.stringify(gruposParticipantes));
+            }
+            localStorage.setItem('grupoCriado', nomeGrupo);
+            feedbackMsg.textContent = `Ingresso realizado com sucesso no grupo "${nomeGrupo}"!`;
+            feedbackMsg.className = 'feedback-message feedback-success';
+            setTimeout(() => {
+                window.location.href = 'group-chat.html';
+            }, 1200);
         };
 
         backBtn.onclick = function() {

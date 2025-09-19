@@ -6,10 +6,12 @@
     <title>Home - Conexxa</title>
     <style>
         body {
-            background-color: #00008B;
             margin: 0;
             padding: 0;
             font-family: Arial, sans-serif;
+            min-height: 100vh;
+            background-color: #232946;
+            background-image: url('https://www.transparenttextures.com/patterns/cubes.png');
         }
         .hamburger {
             position: absolute;
@@ -91,8 +93,13 @@
         <li class="menu-item" data-link="index.html">Sair</li>
     </ul>
 </div>
+
 <div class="welcome">
-    Bem-vindo à Conexxa!
+    Bem vindo ao bate papo de grupos de estudos
+</div>
+<div id="gruposHome" style="max-width:500px;margin:32px auto 0 auto;background:#fff;border-radius:10px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,0.12);">
+    <h3 style="text-align:center;color:#00008B;">Seus Grupos</h3>
+    <div id="listaGrupos"></div>
 </div>
 
 <script>
@@ -118,6 +125,41 @@
             }
         });
     });
+
+    function renderGruposHome() {
+        let grupos = JSON.parse(localStorage.getItem('gruposCriados') || '[]');
+        const lista = document.getElementById('listaGrupos');
+        if (!lista) return;
+        lista.innerHTML = grupos.length === 0 ? '<div style="text-align:center;color:#888;">Nenhum grupo criado.</div>' :
+            grupos.map(nome => `
+                <div style="display:flex;align-items:center;justify-content:space-between;background:#f8f9fa;padding:10px;border-radius:6px;margin-bottom:8px;">
+                    <span style="font-weight:bold;color:#333;">${nome}</span>
+                    <span>
+                        <button onclick="acessarGrupoChat('${nome}')" style="background:#007BFF;color:#fff;border:none;border-radius:4px;padding:6px 12px;cursor:pointer;">Chat</button>
+                        <button onclick="deletarGrupoHome('${nome}')" style="background:#dc3545;color:#fff;border:none;border-radius:4px;padding:6px 12px;cursor:pointer;margin-left:6px;">Deletar</button>
+                    </span>
+                </div>
+            `).join('');
+    }
+
+    function acessarGrupoChat(nome) {
+        localStorage.setItem('grupoCriado', nome);
+        window.location.href = 'group-chat.html';
+    }
+
+    function deletarGrupoHome(nome) {
+        let grupos = JSON.parse(localStorage.getItem('gruposCriados') || '[]');
+        grupos = grupos.filter(g => g !== nome);
+        localStorage.setItem('gruposCriados', JSON.stringify(grupos));
+        if (localStorage.getItem('grupoCriado') === nome) {
+            localStorage.removeItem('grupoCriado');
+        }
+        renderGruposHome();
+        if (window.atualizarAdminGrupos) window.atualizarAdminGrupos();
+    }
+
+    window.renderGruposHome = renderGruposHome;
+    renderGruposHome();
 </script>
 
 </body>

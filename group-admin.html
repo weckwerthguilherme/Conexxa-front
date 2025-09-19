@@ -99,96 +99,242 @@
 <body>
     <div class="admin-container">
         <h2>Administração de Grupo</h2>
-        <div class="group-info">
-            <span><strong>Título:</strong> Grupo de Matemática</span>
-            <span><strong>Tags:</strong> matemática, álgebra</span>
-            <span><strong>Limite de participantes:</strong> 10</span>
-        </div>
-        <div id="feedbackMsg" class="feedback-message"></div>
-        <div class="members-list">
-            <h3>Membros</h3>
-            <!-- Simulação de membros -->
-            <div class="member-row" data-name="Ana">
-                <span class="member-name">Ana</span>
-                <span class="role">Administrador</span>
-                <span class="actions">
-                    <!-- Ana já é admin, não pode promover -->
-                    <button class="remove-btn">Remover</button>
-                    <button class="mute-btn">Silenciar</button>
-                </span>
-            </div>
-            <div class="member-row" data-name="Bruno">
-                <span class="member-name">Bruno</span>
-                <span class="role">Membro</span>
-                <span class="actions">
-                    <button class="promote-btn">Promover a Admin</button>
-                    <button class="remove-btn">Remover</button>
-                    <button class="mute-btn">Silenciar</button>
-                </span>
-            </div>
-            <div class="member-row" data-name="Carlos">
-                <span class="member-name">Carlos</span>
-                <span class="role">Membro</span>
-                <span class="actions">
-                    <button class="promote-btn">Promover a Admin</button>
-                    <button class="remove-btn">Remover</button>
-                    <button class="mute-btn">Silenciar</button>
-                </span>
-            </div>
-            <div class="member-row" data-name="Diana">
-                <span class="member-name">Diana</span>
-                <span class="role">Membro</span>
-                <span class="actions">
-                    <button class="promote-btn">Promover a Admin</button>
-                    <button class="remove-btn">Remover</button>
-                    <button class="mute-btn">Silenciar</button>
-                </span>
-            </div>
-        </div>
+        <div id="gruposAdmin"></div>
+        <div id="msgAdmin" style="color:#dc3545; font-size:1rem; margin-top:8px;"></div>
         <button class="back-button" id="backBtn">Voltar à Home</button>
+        <!-- Modal de edição -->
+        <div id="editModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);justify-content:center;align-items:center;z-index:999;">
+            <div style="background:#fff;padding:24px;border-radius:10px;min-width:320px;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+                <h3 style="margin-top:0;">Editar Grupo</h3>
+                <div style="margin-bottom:10px;">
+                    <label>Nome:</label>
+                    <input type="text" id="editNome" style="width:100%;padding:6px;">
+                </div>
+                <div style="margin-bottom:10px;">
+                    <label>Tags:</label>
+                    <input type="text" id="editTags" style="width:100%;padding:6px;">
+                </div>
+                <div style="margin-bottom:10px;">
+                    <label>Limite:</label>
+                    <input type="number" id="editLimite" min="2" max="50" style="width:100%;padding:6px;">
+                </div>
+                <div style="margin-bottom:10px;">
+                    <label>Membros:</label>
+                    <div id="editMembros" style="background:#f8f9fa;padding:8px;border-radius:6px;max-height:120px;overflow-y:auto;"></div>
+                </div>
+                <div id="editMsg" style="color:#dc3545;font-size:0.95rem;margin-bottom:8px;"></div>
+                <button id="saveEditBtn" style="background:#007BFF;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;">Salvar</button>
+                <button id="cancelEditBtn" style="background:#6c757d;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;margin-left:8px;">Cancelar</button>
+            </div>
+        </div>
     </div>
     <script>
-        const feedbackMsg = document.getElementById('feedbackMsg');
         const backBtn = document.getElementById('backBtn');
+        const gruposAdmin = document.getElementById('gruposAdmin');
 
-        // Simula papel do usuário logado (admin)
-        const currentUserRole = 'admin';
 
-        // Moderação de membros
-        document.querySelectorAll('.promote-btn').forEach(btn => {
-            btn.onclick = function() {
-                const row = btn.closest('.member-row');
-                const name = row.getAttribute('data-name');
-                const roleSpan = row.querySelector('.role');
-                if (roleSpan.textContent === 'Administrador') {
-                    feedbackMsg.textContent = 'Este membro já é administrador.';
-                    feedbackMsg.className = 'feedback-message feedback-error';
+        // Recupera grupos criados e participantes dinâmicos
+        function renderGruposAdmin() {
+            let grupos = JSON.parse(localStorage.getItem('gruposCriados') || '[]');
+            let gruposParticipantes = JSON.parse(localStorage.getItem('gruposParticipantes') || '{}');
+            gruposAdmin.innerHTML = grupos.length === 0 ? '<div style="text-align:center;color:#888;">Nenhum grupo criado.</div>' :
+                grupos.map(nome => {
+                    let grupoInfo = JSON.parse(localStorage.getItem('gruposInfo') || '{}');
+                    let info = grupoInfo[nome] || { tags: '', limite: 10 };
+                    let participantes = gruposParticipantes[nome] || [
+                        { nome: 'Ana', papel: 'Administrador' },
+                        { nome: 'Bruno', papel: 'Membro' },
+                        { nome: 'Carlos', papel: 'Membro' },
+                        { nome: 'Diana', papel: 'Membro' }
+                    ];
+                    return `
+                        <div class="group-info">
+                            <span><strong>Título:</strong> ${nome}</span>
+                            <span><strong>Tags:</strong> ${info.tags || '(defina na criação)'}</span>
+                            <span><strong>Limite de participantes:</strong> ${info.limite || '(defina na criação)'}</span>
+                            <button onclick="deletarGrupoAdmin('${nome}')" style="background:#dc3545; color:#fff; border:none; border-radius:6px; padding:6px 12px; margin-top:8px; cursor:pointer;">Deletar Grupo</button>
+                            <button onclick="abrirEditarGrupo('${nome}')" style="background:#ffc107; color:#333; border:none; border-radius:6px; padding:6px 12px; margin-top:8px; margin-left:8px; cursor:pointer;">Editar Grupo</button>
+                        </div>
+                        <div class="members-list" data-group="${nome}">
+                            <h3>Membros</h3>
+                            ${participantes.map((p, idx) => `
+                                <div class="member-row" data-name="${p.nome}" data-idx="${idx}">
+                                    <span class="member-name">${p.nome}</span>
+                                    <span class="role">${p.papel}</span>
+                                    <span class="actions">
+                                        ${p.papel === 'Administrador' ? '' : '<button class="promote-btn">Promover a Admin</button>'}
+                                        <button class="remove-btn">Remover</button>
+                                        <button class="mute-btn">Silenciar</button>
+                                    </span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div id="feedbackMsg" class="feedback-message"></div>
+                    `;
+                }).join('<hr>');
+        // Função para abrir modal de edição
+        function abrirEditarGrupo(nome) {
+            let grupoInfo = JSON.parse(localStorage.getItem('gruposInfo') || '{}');
+            let info = grupoInfo[nome] || { tags: '', limite: 10 };
+            let gruposParticipantes = JSON.parse(localStorage.getItem('gruposParticipantes') || '{}');
+            let participantes = gruposParticipantes[nome] || [
+                { nome: 'Ana', papel: 'Administrador' },
+                { nome: 'Bruno', papel: 'Membro' },
+                { nome: 'Carlos', papel: 'Membro' },
+                { nome: 'Diana', papel: 'Membro' }
+            ];
+            document.getElementById('editModal').style.display = 'flex';
+            document.getElementById('editNome').value = nome;
+            document.getElementById('editTags').value = info.tags || '';
+            document.getElementById('editLimite').value = info.limite || 10;
+            document.getElementById('editMsg').textContent = '';
+
+            // Renderiza membros na modal
+            const editMembros = document.getElementById('editMembros');
+            function renderEditMembros() {
+                editMembros.innerHTML = participantes.length === 0 ? '<div style="color:#888;text-align:center;">Nenhum membro.</div>' :
+                    participantes.map((p, idx) => `
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                            <span style="font-weight:bold;">${p.nome}</span>
+                            <span style="font-size:13px;color:#007BFF;margin-left:8px;">${p.papel}</span>
+                            <button onclick="window.removerMembroEdit(${idx})" style="background:#dc3545;color:#fff;border:none;border-radius:4px;padding:4px 10px;cursor:pointer;margin-left:8px;">Remover</button>
+                        </div>
+                    `).join('');
+            }
+            window.removerMembroEdit = function(idx) {
+                participantes.splice(idx, 1);
+                renderEditMembros();
+            };
+            renderEditMembros();
+
+            document.getElementById('saveEditBtn').onclick = function() {
+                let novoNome = document.getElementById('editNome').value.trim();
+                let tags = document.getElementById('editTags').value.trim();
+                let limite = parseInt(document.getElementById('editLimite').value);
+                if (!novoNome || novoNome.length < 3) {
+                    document.getElementById('editMsg').textContent = 'O nome deve ter pelo menos 3 caracteres.';
                     return;
                 }
-                roleSpan.textContent = 'Administrador';
-                feedbackMsg.textContent = `Membro ${name} promovido a administrador com sucesso!`;
-                feedbackMsg.className = 'feedback-message feedback-success';
+                if (!tags) {
+                    document.getElementById('editMsg').textContent = 'Informe pelo menos uma tag.';
+                    return;
+                }
+                if (!limite || limite < 2 || limite > 50) {
+                    document.getElementById('editMsg').textContent = 'Limite deve ser entre 2 e 50.';
+                    return;
+                }
+                if (participantes.length > limite) {
+                    document.getElementById('editMsg').textContent = 'O número de membros excede o limite.';
+                    return;
+                }
+                // Atualiza info
+                let gruposInfo = JSON.parse(localStorage.getItem('gruposInfo') || '{}');
+                let grupos = JSON.parse(localStorage.getItem('gruposCriados') || '[]');
+                let gruposParticipantes = JSON.parse(localStorage.getItem('gruposParticipantes') || '{}');
+                // Se mudou nome, atualiza arrays
+                if (novoNome !== nome) {
+                    if (grupos.includes(novoNome)) {
+                        document.getElementById('editMsg').textContent = 'Já existe um grupo com esse nome.';
+                        return;
+                    }
+                    grupos = grupos.map(g => g === nome ? novoNome : g);
+                    gruposInfo[novoNome] = { tags, limite };
+                    gruposParticipantes[novoNome] = participantes;
+                    delete gruposInfo[nome];
+                    delete gruposParticipantes[nome];
+                    if (localStorage.getItem('grupoCriado') === nome) {
+                        localStorage.setItem('grupoCriado', novoNome);
+                    }
+                } else {
+                    gruposInfo[nome] = { tags, limite };
+                    gruposParticipantes[nome] = participantes;
+                }
+                localStorage.setItem('gruposCriados', JSON.stringify(grupos));
+                localStorage.setItem('gruposInfo', JSON.stringify(gruposInfo));
+                localStorage.setItem('gruposParticipantes', JSON.stringify(gruposParticipantes));
+                document.getElementById('editModal').style.display = 'none';
+                renderGruposAdmin();
+                if (window.renderGruposHome) window.renderGruposHome();
             };
-        });
+            document.getElementById('cancelEditBtn').onclick = function() {
+                document.getElementById('editModal').style.display = 'none';
+            };
+        }
 
-        document.querySelectorAll('.remove-btn').forEach(btn => {
-            btn.onclick = function() {
-                const row = btn.closest('.member-row');
-                const name = row.getAttribute('data-name');
-                row.remove();
-                feedbackMsg.textContent = `Membro ${name} removido com sucesso!`;
-                feedbackMsg.className = 'feedback-message feedback-success';
-            };
-        });
+            // Moderação de membros
+            setTimeout(() => {
+                document.querySelectorAll('.promote-btn').forEach(btn => {
+                    btn.onclick = function() {
+                        const row = btn.closest('.member-row');
+                        const name = row.getAttribute('data-name');
+                        const roleSpan = row.querySelector('.role');
+                        const feedbackMsg = row.closest('.members-list').nextElementSibling;
+                        if (roleSpan.textContent === 'Administrador') {
+                            feedbackMsg.textContent = 'Este membro já é administrador.';
+                            feedbackMsg.className = 'feedback-message feedback-error';
+                            return;
+                        }
+                        roleSpan.textContent = 'Administrador';
+                        feedbackMsg.textContent = `Membro ${name} promovido a administrador com sucesso!`;
+                        feedbackMsg.className = 'feedback-message feedback-success';
 
-        document.querySelectorAll('.mute-btn').forEach(btn => {
-            btn.onclick = function() {
-                const row = btn.closest('.member-row');
-                const name = row.getAttribute('data-name');
-                feedbackMsg.textContent = `Membro ${name} silenciado com sucesso!`;
-                feedbackMsg.className = 'feedback-message feedback-success';
-            };
-        });
+                        // Atualiza papel no localStorage
+                        const groupName = row.closest('.members-list').getAttribute('data-group');
+                        let gruposParticipantes = JSON.parse(localStorage.getItem('gruposParticipantes') || '{}');
+                        let participantes = gruposParticipantes[groupName] || [];
+                        let idx = parseInt(row.getAttribute('data-idx'));
+                        if (participantes[idx]) participantes[idx].papel = 'Administrador';
+                        gruposParticipantes[groupName] = participantes;
+                        localStorage.setItem('gruposParticipantes', JSON.stringify(gruposParticipantes));
+                    };
+                });
+                document.querySelectorAll('.remove-btn').forEach(btn => {
+                    btn.onclick = function() {
+                        const row = btn.closest('.member-row');
+                        const name = row.getAttribute('data-name');
+                        const groupName = row.closest('.members-list').getAttribute('data-group');
+                        let gruposParticipantes = JSON.parse(localStorage.getItem('gruposParticipantes') || '{}');
+                        let participantes = gruposParticipantes[groupName] || [];
+                        let idx = parseInt(row.getAttribute('data-idx'));
+                        participantes.splice(idx, 1);
+                        gruposParticipantes[groupName] = participantes;
+                        localStorage.setItem('gruposParticipantes', JSON.stringify(gruposParticipantes));
+                        renderGruposAdmin();
+                        const feedbackMsg = row.closest('.members-list').nextElementSibling;
+                        feedbackMsg.textContent = `Membro ${name} removido com sucesso!`;
+                        feedbackMsg.className = 'feedback-message feedback-success';
+                    };
+                });
+                document.querySelectorAll('.mute-btn').forEach(btn => {
+                    btn.onclick = function() {
+                        const row = btn.closest('.member-row');
+                        const name = row.getAttribute('data-name');
+                        const feedbackMsg = row.closest('.members-list').nextElementSibling;
+                        feedbackMsg.textContent = `Membro ${name} silenciado com sucesso!`;
+                        feedbackMsg.className = 'feedback-message feedback-success';
+                    };
+                });
+            }, 100);
+        }
+
+        function deletarGrupoAdmin(nome) {
+            let grupos = JSON.parse(localStorage.getItem('gruposCriados') || '[]');
+            grupos = grupos.filter(g => g !== nome);
+            localStorage.setItem('gruposCriados', JSON.stringify(grupos));
+            let gruposParticipantes = JSON.parse(localStorage.getItem('gruposParticipantes') || '{}');
+            delete gruposParticipantes[nome];
+            localStorage.setItem('gruposParticipantes', JSON.stringify(gruposParticipantes));
+            if (localStorage.getItem('grupoCriado') === nome) {
+                localStorage.removeItem('grupoCriado');
+            }
+            document.getElementById('msgAdmin').textContent = `Grupo "${nome}" deletado!`;
+            renderGruposAdmin();
+            if (window.renderGruposHome) window.renderGruposHome();
+        }
+
+        // Permite atualização cruzada
+        window.atualizarAdminGrupos = renderGruposAdmin;
+        renderGruposAdmin();
 
         backBtn.onclick = function() {
             window.location.href = 'home.html';
