@@ -104,8 +104,8 @@
             <input type="text" id="groupName" placeholder="Digite o nome do grupo">
         </div>
         <div class="form-group">
-            <label for="tags">Tags (separadas por vírgula)</label>
-            <input type="text" id="tags" placeholder="Ex: matemática, programação">
+            <label for="tags">Descrição</label>
+            <input type="text" id="tags" placeholder="Descreva o grupo">
         </div>
         <div class="form-group">
             <label for="limit">Limite de Participantes</label>
@@ -122,12 +122,17 @@
         <button class="create-button" id="createBtn">Criar Grupo</button>
         <button class="back-button" id="backBtn">Voltar à Home</button>
     </div>
-    <script>
+    <script src="env.js">
+        const getApiUrl = async () => {
+            const env = await window.getEnv();
+            return env.API_URL;
+        };
+
         const groupNameInput = document.getElementById('groupName');
         const tagsInput = document.getElementById('tags');
         const limitInput = document.getElementById('limit');
         const createBtn = document.getElementById('createBtn');
-        const backBtn = document.getElementById('backBtn');
+        const backBtn = document.getElementById('backBtn'); 
         const errorMsg = document.getElementById('errorMsg');
         const successMsg = document.getElementById('successMsg');
         const userCheckboxes = document.querySelectorAll('.user-list input[type="checkbox"]');
@@ -155,12 +160,12 @@
             }
         });
 
-        createBtn.onclick = function() {
+        createBtn.onclick = async function() {
             errorMsg.textContent = '';
             successMsg.textContent = '';
 
             const groupName = groupNameInput.value.trim();
-            const tags = tagsInput.value.trim();
+            const descricao = tagsInput.value.trim();
             const limit = parseInt(limitInput.value);
             const selectedUsers = Array.from(userCheckboxes)
                 .filter(cb => cb.checked)
@@ -170,8 +175,8 @@
                 errorMsg.textContent = 'O nome do grupo deve ter pelo menos 3 caracteres.';
                 return;
             }
-            if (!tags) {
-                errorMsg.textContent = 'Informe pelo menos uma tag.';
+            if (!descricao) {
+                errorMsg.textContent = 'Informe uma descrição para o grupo.';
                 return;
             }
             if (!limit || limit < 2 || limit > 50) {
@@ -187,11 +192,40 @@
                 return;
             }
 
-            // Simula criação bem-sucedida
-            successMsg.textContent = 'Grupo criado com sucesso!';
-            setTimeout(() => {
-                window.location.href = 'home.html';
-            }, 1500);
+            // Recupera o id do usuário logado do localStorage
+            const criadorId = localStorage.getItem('loggedUserId');
+            if (!criadorId) {
+                errorMsg.textContent = 'Usuário logado não encontrado. Faça login novamente.';
+                return;
+            }
+
+            // Envia requisição para criar grupo
+            try {
+                const API_URL = await getApiUrl();
+                const response = await fetch(`${API_URL}/groups`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        nome: groupName,
+                        descricao: descricao,
+                        criadorId: parseInt(criadorId)
+                    })
+                });
+
+                if (response.ok) {
+                    successMsg.textContent = 'Grupo criado com sucesso!';
+                    setTimeout(() => {
+                        window.location.href = 'home.html';
+                    }, 1500);
+                } else {
+                    const data = await response.json();
+                    errorMsg.textContent = data.message || 'Erro ao criar grupo.';
+                }
+            } catch (err) {
+                errorMsg.textContent = 'Erro de conexão com o servidor.';
+            }
         };
 
         backBtn.onclick = function() {

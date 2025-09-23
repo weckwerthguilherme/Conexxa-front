@@ -121,12 +121,12 @@
             <h2>Login</h2>
             <div id="errorMsg" class="error-message"></div>
             <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" placeholder="Enter username">
+                <label for="username">E-mail</label>
+                <input type="email" id="username" placeholder="Digite seu e-mail">
             </div>
             <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" placeholder="Enter password">
+                <label for="password">Senha</label>
+                <input type="password" id="password" placeholder="Digite sua senha">
                 <div id="passwordRules" style="font-size:12px; color:#555; margin-top:5px;">
                     A senha deve ter pelo menos 8 caracteres, uma letra maiúscula, uma minúscula, um número e um símbolo.
                 </div>
@@ -139,7 +139,14 @@
         </div>
     </div>
 
-    <script>
+    <script src="env.js">
+        const getApiUrl = async () => {
+            const env = await window.getEnv();
+            return env.API_URL;
+        };
+
+        
+
         const passwordInput = document.getElementById('password');
         const usernameInput = document.getElementById('username');
         const loginBtn = document.getElementById('loginBtn');
@@ -165,13 +172,13 @@
             }
         });
 
-        // Validação dos campos e redirecionamento
-        loginBtn.onclick = function() {
+        // Validação dos campos e requisição de login
+        loginBtn.onclick = async function() {
             errorMsg.textContent = '';
-            const username = usernameInput.value.trim();
+            const email = usernameInput.value.trim();
             const password = passwordInput.value;
 
-            if (!username || !password) {
+            if (!email || !password) {
                 errorMsg.textContent = 'Preencha todos os campos.';
                 return;
             }
@@ -179,8 +186,46 @@
                 errorMsg.textContent = 'A senha não atende aos requisitos.';
                 return;
             }
-            // Simula login bem-sucedido
-            window.location.href = 'home.html';
+
+            // Requisição para login
+            try {
+                const API_URL = await getApiUrl();
+                const response = await fetch(`${API_URL}/users/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        senha: password
+                    })
+                });
+
+                if (response.ok) {
+                    // Após login bem-sucedido, buscar todos os usuários
+                    const usersResponse = await fetch(`${API_URL}/users/all`);
+                    if (usersResponse.ok) {
+                        const users = await usersResponse.json();
+                        // Filtra usuário pelo e-mail usado no login
+                        const loggedUser = users.find(u => u.email === email);
+                        if (loggedUser) {
+                            // Salva o id do usuário logado no localStorage
+                            localStorage.setItem('loggedUserId', loggedUser.id);
+                            localStorage.setItem('loggedUserEmail', loggedUser.email);
+                            window.location.href = 'home.html';
+                        } else {
+                            errorMsg.textContent = 'Usuário não encontrado após login.';
+                        }
+                    } else {
+                        errorMsg.textContent = 'Erro ao buscar usuários.';
+                    }
+                } else {
+                    const data = await response.json();
+                    errorMsg.textContent = data.message || 'Usuário ou senha inválidos.';
+                }
+            } catch (err) {
+                errorMsg.textContent = 'Erro de conexão com o servidor.';
+            }
         };
 
         // Redireciona para tela de cadastro
@@ -213,3 +258,4 @@
         });
     </script>
 </body>
+</html>

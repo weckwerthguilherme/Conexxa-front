@@ -20,7 +20,7 @@
             padding: 28px;
             border-radius: 10px;
             box-shadow: 0 0 12px rgba(0,0,0,0.12);
-            width: 420px;
+            width: 520px;
         }
         .admin-container h2 {
             text-align: center;
@@ -36,6 +36,37 @@
             display: block;
             margin-bottom: 6px;
             font-size: 15px;
+        }
+        .edit-group {
+            margin-bottom: 18px;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        .edit-group input {
+            margin-bottom: 8px;
+            width: 100%;
+            padding: 6px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        .edit-group button {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 4px;
+            background: #007BFF;
+            color: #fff;
+            cursor: pointer;
+            margin-right: 8px;
+        }
+        .delete-group-btn {
+            background: #dc3545;
+            color: #fff;
+            padding: 6px 14px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 10px;
         }
         .members-list {
             margin-bottom: 18px;
@@ -69,7 +100,6 @@
             font-size: 13px;
             cursor: pointer;
         }
-        .promote-btn { background: #28a745; color: #fff; }
         .remove-btn { background: #dc3545; color: #fff; }
         .mute-btn { background: #ffc107; color: #333; }
         .back-button {
@@ -94,105 +124,261 @@
         .feedback-error {
             color: #dc3545;
         }
+        .tarefas-list {
+            margin-bottom: 18px;
+        }
+        .tarefas-list h3 {
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        .tarefa-row {
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 5px;
+            margin-bottom: 6px;
+        }
+        .tarefa-title {
+            font-weight: bold;
+        }
+        .tarefa-status {
+            font-size: 13px;
+            color: #007BFF;
+            margin-left: 8px;
+        }
     </style>
 </head>
 <body>
     <div class="admin-container">
         <h2>Administração de Grupo</h2>
-        <div class="group-info">
-            <span><strong>Título:</strong> Grupo de Matemática</span>
-            <span><strong>Tags:</strong> matemática, álgebra</span>
-            <span><strong>Limite de participantes:</strong> 10</span>
-        </div>
         <div id="feedbackMsg" class="feedback-message"></div>
-        <div class="members-list">
+        <div class="group-info" id="groupInfo">
+            <!-- Dados do grupo aqui -->
+        </div>
+        <div class="edit-group" id="editGroup" style="display:none;">
+            <input type="text" id="editNome" placeholder="Novo nome do grupo">
+            <input type="text" id="editDescricao" placeholder="Nova descrição do grupo">
+            <button id="saveEditBtn">Salvar Alterações</button>
+            <button id="cancelEditBtn">Cancelar</button>
+        </div>
+        <button class="delete-group-btn" id="deleteGroupBtn">Excluir Grupo</button>
+        <div class="members-list" id="membersList">
             <h3>Membros</h3>
-            <!-- Simulação de membros -->
-            <div class="member-row" data-name="Ana">
-                <span class="member-name">Ana</span>
-                <span class="role">Administrador</span>
-                <span class="actions">
-                    <!-- Ana já é admin, não pode promover -->
-                    <button class="remove-btn">Remover</button>
-                    <button class="mute-btn">Silenciar</button>
-                </span>
-            </div>
-            <div class="member-row" data-name="Bruno">
-                <span class="member-name">Bruno</span>
-                <span class="role">Membro</span>
-                <span class="actions">
-                    <button class="promote-btn">Promover a Admin</button>
-                    <button class="remove-btn">Remover</button>
-                    <button class="mute-btn">Silenciar</button>
-                </span>
-            </div>
-            <div class="member-row" data-name="Carlos">
-                <span class="member-name">Carlos</span>
-                <span class="role">Membro</span>
-                <span class="actions">
-                    <button class="promote-btn">Promover a Admin</button>
-                    <button class="remove-btn">Remover</button>
-                    <button class="mute-btn">Silenciar</button>
-                </span>
-            </div>
-            <div class="member-row" data-name="Diana">
-                <span class="member-name">Diana</span>
-                <span class="role">Membro</span>
-                <span class="actions">
-                    <button class="promote-btn">Promover a Admin</button>
-                    <button class="remove-btn">Remover</button>
-                    <button class="mute-btn">Silenciar</button>
-                </span>
-            </div>
+            <!-- Membros aqui -->
+        </div>
+        <div class="tarefas-list" id="tarefasList">
+            <h3>Tarefas</h3>
+            <!-- Tarefas aqui -->
         </div>
         <button class="back-button" id="backBtn">Voltar à Home</button>
     </div>
-    <script>
+    <script src="env.js">
+        const getApiUrl = async () => {
+            const env = await window.getEnv();
+            return env.API_URL;
+        };
         const feedbackMsg = document.getElementById('feedbackMsg');
         const backBtn = document.getElementById('backBtn');
+        const groupInfoDiv = document.getElementById('groupInfo');
+        const membersListDiv = document.getElementById('membersList');
+        const tarefasListDiv = document.getElementById('tarefasList');
+        const editGroupDiv = document.getElementById('editGroup');
+        const editNomeInput = document.getElementById('editNome');
+        const editDescricaoInput = document.getElementById('editDescricao');
+        const saveEditBtn = document.getElementById('saveEditBtn');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        const deleteGroupBtn = document.getElementById('deleteGroupBtn');
 
-        // Simula papel do usuário logado (admin)
-        const currentUserRole = 'admin';
+        let selectedGroup = null;
 
-        // Moderação de membros
-        document.querySelectorAll('.promote-btn').forEach(btn => {
-            btn.onclick = function() {
-                const row = btn.closest('.member-row');
-                const name = row.getAttribute('data-name');
-                const roleSpan = row.querySelector('.role');
-                if (roleSpan.textContent === 'Administrador') {
-                    feedbackMsg.textContent = 'Este membro já é administrador.';
+        // Busca grupos ao carregar página
+        async function fetchGroups() {
+            feedbackMsg.textContent = '';
+            try {
+                const API_URL = await getApiUrl();
+                const response = await fetch(`${API_URL}/groups`);
+                if (response.ok) {
+                    const groups = await response.json();
+                    // Exibe o primeiro grupo (ou selecione conforme sua lógica)
+                    if (groups.length > 0) {
+                        selectedGroup = groups[0];
+                        renderGroup(selectedGroup);
+                    } else {
+                        groupInfoDiv.innerHTML = '<span>Nenhum grupo encontrado.</span>';
+                        membersListDiv.innerHTML = '';
+                        tarefasListDiv.innerHTML = '';
+                        deleteGroupBtn.style.display = 'none';
+                    }
+                } else {
+                    feedbackMsg.textContent = 'Erro ao buscar grupos.';
                     feedbackMsg.className = 'feedback-message feedback-error';
-                    return;
                 }
-                roleSpan.textContent = 'Administrador';
-                feedbackMsg.textContent = `Membro ${name} promovido a administrador com sucesso!`;
-                feedbackMsg.className = 'feedback-message feedback-success';
-            };
-        });
+            } catch (err) {
+                feedbackMsg.textContent = 'Erro de conexão com o servidor.';
+                feedbackMsg.className = 'feedback-message feedback-error';
+            }
+        }
 
-        document.querySelectorAll('.remove-btn').forEach(btn => {
-            btn.onclick = function() {
-                const row = btn.closest('.member-row');
-                const name = row.getAttribute('data-name');
-                row.remove();
-                feedbackMsg.textContent = `Membro ${name} removido com sucesso!`;
-                feedbackMsg.className = 'feedback-message feedback-success';
-            };
-        });
+        function renderGroup(group) {
+            // Exibe informações do grupo
+            groupInfoDiv.innerHTML = `
+                <span><strong>ID:</strong> ${group.id}</span>
+                <span><strong>Nome:</strong> ${group.nome}</span>
+                <span><strong>Descrição:</strong> ${group.descricao}</span>
+                <span><strong>Criador:</strong> ${group.criador ? group.criador.nome : ''}</span>
+                <span><strong>Data de Criação:</strong> ${group.dataCriacao ? new Date(group.dataCriacao).toLocaleString() : ''}</span>
+                <button id="editGroupBtn">Editar Grupo</button>
+            `;
+            // Exibe membros
+            let membersHtml = '<h3>Membros</h3>';
+            if (group.membros && group.membros.length > 0) {
+                group.membros.forEach(member => {
+                    membersHtml += `
+                        <div class="member-row" data-userid="${member.id}">
+                            <span class="member-name">${member.nome}</span>
+                            <span class="role">${member.id === group.criador.id ? 'Administrador' : 'Membro'}</span>
+                            <span class="actions">
+                                ${member.id !== group.criador.id ? `<button class="remove-btn">Remover</button>` : ''}
+                            </span>
+                        </div>
+                    `;
+                });
+            } else {
+                membersHtml += '<div style="color:#888;">Nenhum membro.</div>';
+            }
+            membersListDiv.innerHTML = membersHtml;
 
-        document.querySelectorAll('.mute-btn').forEach(btn => {
-            btn.onclick = function() {
-                const row = btn.closest('.member-row');
-                const name = row.getAttribute('data-name');
-                feedbackMsg.textContent = `Membro ${name} silenciado com sucesso!`;
-                feedbackMsg.className = 'feedback-message feedback-success';
+            // Exibe tarefas
+            let tarefasHtml = '<h3>Tarefas</h3>';
+            if (group.tarefas && group.tarefas.length > 0) {
+                group.tarefas.forEach(tarefa => {
+                    tarefasHtml += `
+                        <div class="tarefa-row">
+                            <span class="tarefa-title">${tarefa.titulo}</span>
+                            <span class="tarefa-status">${tarefa.status}</span>
+                            <div>${tarefa.descricao}</div>
+                            <div>Entrega: ${new Date(tarefa.dataEntrega).toLocaleString()}</div>
+                        </div>
+                    `;
+                });
+            } else {
+                tarefasHtml += '<div style="color:#888;">Nenhuma tarefa.</div>';
+            }
+            tarefasListDiv.innerHTML = tarefasHtml;
+
+            // Botão editar grupo
+            document.getElementById('editGroupBtn').onclick = function() {
+                editGroupDiv.style.display = 'block';
+                editNomeInput.value = group.nome;
+                editDescricaoInput.value = group.descricao;
             };
-        });
+
+            // Botão excluir grupo
+            deleteGroupBtn.style.display = 'inline-block';
+            deleteGroupBtn.onclick = function() {
+                if (confirm('Tem certeza que deseja excluir este grupo?')) {
+                    deleteGroup(group.id);
+                }
+            };
+
+            // Botão remover membro
+            document.querySelectorAll('.remove-btn').forEach(btn => {
+                btn.onclick = function() {
+                    const memberRow = btn.closest('.member-row');
+                    const userId = memberRow.getAttribute('data-userid');
+                    removeMember(group.id, userId);
+                };
+            });
+        }
+
+        // Salvar edição do grupo
+        saveEditBtn.onclick = async function() {
+            if (!selectedGroup) return;
+            const nome = editNomeInput.value.trim();
+            const descricao = editDescricaoInput.value.trim();
+            if (!nome || !descricao) {
+                feedbackMsg.textContent = 'Preencha nome e descrição.';
+                feedbackMsg.className = 'feedback-message feedback-error';
+                return;
+            }
+            try {
+                const API_URL = await getApiUrl();
+                const response = await fetch(`${API_URL}/groups/${selectedGroup.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ nome, descricao })
+                });
+                if (response.ok) {
+                    feedbackMsg.textContent = 'Grupo atualizado com sucesso!';
+                    feedbackMsg.className = 'feedback-message feedback-success';
+                    editGroupDiv.style.display = 'none';
+                    fetchGroups();
+                } else {
+                    feedbackMsg.textContent = 'Erro ao atualizar grupo.';
+                    feedbackMsg.className = 'feedback-message feedback-error';
+                }
+            } catch (err) {
+                feedbackMsg.textContent = 'Erro de conexão com o servidor.';
+                feedbackMsg.className = 'feedback-message feedback-error';
+            }
+        };
+
+        cancelEditBtn.onclick = function() {
+            editGroupDiv.style.display = 'none';
+        };
+
+        // Excluir grupo
+        async function deleteGroup(groupId) {
+            try {
+                const API_URL = await getApiUrl();
+                const response = await fetch(`${API_URL}/groups/${groupId}`, {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    feedbackMsg.textContent = 'Grupo excluído com sucesso!';
+                    feedbackMsg.className = 'feedback-message feedback-success';
+                    selectedGroup = null;
+                    setTimeout(() => {
+                        fetchGroups();
+                    }, 1200);
+                } else {
+                    feedbackMsg.textContent = 'Erro ao excluir grupo.';
+                    feedbackMsg.className = 'feedback-message feedback-error';
+                }
+            } catch (err) {
+                feedbackMsg.textContent = 'Erro de conexão com o servidor.';
+                feedbackMsg.className = 'feedback-message feedback-error';
+            }
+        }
+
+        // Remover membro do grupo
+        async function removeMember(groupId, userId) {
+            try {
+                const API_URL = await getApiUrl();
+                const response = await fetch(`${API_URL}/groups/${groupId}/members/${userId}`, {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    feedbackMsg.textContent = 'Membro removido com sucesso!';
+                    feedbackMsg.className = 'feedback-message feedback-success';
+                    fetchGroups();
+                } else {
+                    feedbackMsg.textContent = 'Erro ao remover membro.';
+                    feedbackMsg.className = 'feedback-message feedback-error';
+                }
+            } catch (err) {
+                feedbackMsg.textContent = 'Erro de conexão com o servidor.';
+                feedbackMsg.className = 'feedback-message feedback-error';
+            }
+        }
 
         backBtn.onclick = function() {
             window.location.href = 'home.html';
         };
+
+        // Inicializa
+        fetchGroups();
     </script>
 </body>
 </html>

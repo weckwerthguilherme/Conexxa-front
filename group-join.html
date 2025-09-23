@@ -112,51 +112,60 @@
             <button class="search-button" id="searchBtn">Pesquisar</button>
         </div>
         <div class="group-list" id="groupList">
-            <!-- Lista de grupos simulada -->
-        </div>
-        <div class="form-group">
-            <label for="joinCode">Ingresso por código/link:</label>
-            <input type="text" id="joinCode" placeholder="Digite o código ou link do grupo">
-            <button class="join-button" id="joinBtn">Ingressar</button>
+            <!-- Lista de grupos -->
         </div>
         <button class="back-button" id="backBtn">Voltar à Home</button>
     </div>
+    <script src="env.js"></script>
     <script>
         const feedbackMsg = document.getElementById('feedbackMsg');
         const groupList = document.getElementById('groupList');
         const searchInput = document.getElementById('search');
         const searchBtn = document.getElementById('searchBtn');
-        const joinCodeInput = document.getElementById('joinCode');
-        const joinBtn = document.getElementById('joinBtn');
         const backBtn = document.getElementById('backBtn');
 
-        // Simulação de grupos
-        const groups = [
-            { title: 'Grupo de Matemática', tags: ['matemática', 'álgebra'], members: 10, limit: 10 },
-            { title: 'Programação Web', tags: ['programação', 'web'], members: 7, limit: 12 },
-            { title: 'Inglês Básico', tags: ['idiomas', 'inglês'], members: 5, limit: 8 },
-            { title: 'História Geral', tags: ['história'], members: 8, limit: 10 }
-        ];
+        let allGroups = [];
+
+        async function getApiUrl() {
+            const env = await window.getEnv();
+            return env.API_URL;
+        }
+
+        async function fetchGroups() {
+            feedbackMsg.textContent = '';
+            const API_URL = await getApiUrl();
+            try {
+                const response = await fetch(`${API_URL}/groups`);
+                if (response.ok) {
+                    allGroups = await response.json();
+                    renderGroups();
+                } else {
+                    groupList.innerHTML = '<div style="text-align:center;color:#888;">Erro ao buscar grupos.</div>';
+                }
+            } catch (err) {
+                groupList.innerHTML = '<div style="text-align:center;color:#888;">Erro de conexão com o servidor.</div>';
+            }
+        }
 
         function renderGroups(filter = '') {
             groupList.innerHTML = '';
-            let filtered = groups.filter(g => 
-                g.title.toLowerCase().includes(filter.toLowerCase()) ||
-                g.tags.some(tag => tag.toLowerCase().includes(filter.toLowerCase()))
+            let filtered = allGroups.filter(g => 
+                g.nome.toLowerCase().includes(filter.toLowerCase()) ||
+                (g.descricao && g.descricao.toLowerCase().includes(filter.toLowerCase()))
             );
             if (filtered.length === 0) {
                 groupList.innerHTML = '<div style="text-align:center;color:#888;">Nenhum grupo encontrado.</div>';
                 return;
             }
             filtered.forEach(group => {
-                const isFull = group.members >= group.limit;
+                const isFull = group.membros && group.membros.length >= 50; // Ajuste limite conforme necessário
                 const div = document.createElement('div');
                 div.className = 'group-item';
                 div.innerHTML = `
-                    <span class="group-title">${group.title}</span>
-                    <span class="group-tags">Tags: ${group.tags.join(', ')}</span>
+                    <span class="group-title">${group.nome}</span>
+                    <span class="group-tags">Descrição: ${group.descricao || ''}</span>
                     <span class="group-info">
-                        Integrantes: ${group.members} / ${group.limit}
+                        Integrantes: ${group.membros ? group.membros.length : 0}
                         ${isFull ? '<span class="full-group">Grupo cheio</span>' : ''}
                     </span>
                     <button ${isFull ? 'disabled' : ''} class="join-group-btn" style="margin-top:6px;">${isFull ? 'Grupo cheio' : 'Ingressar'}</button>
@@ -171,43 +180,48 @@
                         feedbackMsg.className = 'feedback-message feedback-error';
                         return;
                     }
-                    feedbackMsg.textContent = `Ingresso realizado com sucesso no grupo "${group.title}"!`;
-                    feedbackMsg.className = 'feedback-message feedback-success';
+                    joinGroup(group.id);
                 };
             });
         }
 
-        // Inicializa lista
-        renderGroups();
+        async function joinGroup(groupId) {
+            feedbackMsg.textContent = '';
+            const API_URL = await getApiUrl();
+            const userId = localStorage.getItem('loggedUserId');
+            if (!userId) {
+                feedbackMsg.textContent = 'Usuário não identificado. Faça login novamente.';
+                feedbackMsg.className = 'feedback-message feedback-error';
+                return;
+            }
+            try {
+                const response = await fetch(`${API_URL}/groups/${groupId}/members/${userId}`, {
+                    method: 'POST'
+                });
+                if (response.ok) {
+                    feedbackMsg.textContent = 'Ingresso realizado com sucesso!';
+                    feedbackMsg.className = 'feedback-message feedback-success';
+                    fetchGroups();
+                } else {
+                    feedbackMsg.textContent = 'Erro ao ingressar no grupo.';
+                    feedbackMsg.className = 'feedback-message feedback-error';
+                }
+            } catch (err) {
+                feedbackMsg.textContent = 'Erro de conexão com o servidor.';
+                feedbackMsg.className = 'feedback-message feedback-error';
+            }
+        }
 
         searchBtn.onclick = function() {
             renderGroups(searchInput.value.trim());
         };
 
-        joinBtn.onclick = function() {
-            feedbackMsg.textContent = '';
-            const code = joinCodeInput.value.trim();
-            if (!code) {
-                feedbackMsg.textContent = 'Digite o código ou link do grupo.';
-                feedbackMsg.className = 'feedback-message feedback-error';
-                return;
-            }
-            // Simulação de validação do código
-            if (code === 'MAT123') {
-                feedbackMsg.textContent = 'Ingresso realizado com sucesso no grupo "Grupo de Matemática"!';
-                feedbackMsg.className = 'feedback-message feedback-success';
-            } else if (code === 'WEB456') {
-                feedbackMsg.textContent = 'Ingresso realizado com sucesso no grupo "Programação Web"!';
-                feedbackMsg.className = 'feedback-message feedback-success';
-            } else {
-                feedbackMsg.textContent = 'Código ou link inválido.';
-                feedbackMsg.className = 'feedback-message feedback-error';
-            }
-        };
-
         backBtn.onclick = function() {
             window.location.href = 'home.html';
         };
+
+        // Inicializa lista de grupos da API
+        fetchGroups();
     </script>
 </body>
 </html>

@@ -101,6 +101,10 @@
             <input type="email" id="email" placeholder="exemplo@instituicao.com">
         </div>
         <div class="form-group">
+            <label for="curso">Curso</label>
+            <input type="text" id="curso" placeholder="Digite seu curso">
+        </div>
+        <div class="form-group">
             <label for="password">Senha</label>
             <input type="password" id="password" placeholder="Digite sua senha">
             <div id="passwordRules">
@@ -114,9 +118,15 @@
         <button class="register-button" id="registerBtn">Cadastrar</button>
         <button class="back-button" id="backBtn">Voltar ao Login</button>
     </div>
-    <script>
+    <script src="env.js">
+        const getApiUrl = async () => {
+            const env = await window.getEnv();
+            return env.API_URL;
+        };
+
         const nameInput = document.getElementById('name');
         const emailInput = document.getElementById('email');
+        const cursoInput = document.getElementById('curso');
         const passwordInput = document.getElementById('password');
         const confirmPasswordInput = document.getElementById('confirmPassword');
         const registerBtn = document.getElementById('registerBtn');
@@ -157,16 +167,17 @@
             }
         });
 
-        registerBtn.onclick = function() {
+        registerBtn.onclick = async function() {
             errorMsg.textContent = '';
             successMsg.textContent = '';
 
             const name = nameInput.value.trim();
             const email = emailInput.value.trim();
+            const curso = cursoInput.value.trim();
             const password = passwordInput.value;
             const confirmPassword = confirmPasswordInput.value;
 
-            if (!name || !email || !password || !confirmPassword) {
+            if (!name || !email || !curso || !password || !confirmPassword) {
                 errorMsg.textContent = 'Preencha todos os campos.';
                 return;
             }
@@ -183,11 +194,34 @@
                 return;
             }
 
-            // Simula cadastro bem-sucedido
-            successMsg.textContent = 'Cadastro realizado com sucesso!';
-            setTimeout(() => {
-                window.location.href = 'index.html';
-            }, 1500);
+            // Envia requisição para API
+            try {
+                const API_URL = await getApiUrl();
+                const response = await fetch(`${API_URL}/users`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        nome: name,
+                        email: email,
+                        senhaHash: password,
+                        curso: curso
+                    })
+                });
+
+                if (response.ok) {
+                    successMsg.textContent = 'Cadastro realizado com sucesso!';
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1500);
+                } else {
+                    const data = await response.json();
+                    errorMsg.textContent = data.message || 'Erro ao cadastrar usuário.';
+                }
+            } catch (err) {
+                errorMsg.textContent = 'Erro de conexão com o servidor.';
+            }
         };
 
         backBtn.onclick = function() {
@@ -208,3 +242,5 @@
             return regex.test(email);
         }
     </script>
+</body>
+</html>
